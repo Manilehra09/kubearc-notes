@@ -1,0 +1,20 @@
+# Amazon EKS (session 17): no Ingress controller, a cloud load balancer instead
+replicaCount: 2
+
+app:
+  env: eks
+
+ingress:
+  enabled: false
+
+service:
+  type: LoadBalancer
+  # With the AWS Load Balancer Controller installed, these make it an internet-facing NLB:
+  # annotations:
+  #   service.beta.kubernetes.io/aws-load-balancer-type: external
+  #   service.beta.kubernetes.io/aws-load-balancer-scheme: internet-facing
+  #   service.beta.kubernetes.io/aws-load-balancer-nlb-target-type: ip
+
+postgres:
+  password: ""          # give it with --set postgres.password=…
+  storage: 1Gi          # an EBS gp3 volume via the default StorageClass

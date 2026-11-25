@@ -1,0 +1,61 @@
+# Defaults (dev). values-prod.yaml / values-eks.yaml hold only the differences.
+replicaCount: 2
+
+image:
+  repository: ghcr.io/YOU/kubearc-notes     # <- your user name, lower case
+  tag: ""                                   # empty = Chart.appVersion
+  pullPolicy: IfNotPresent
+
+app:
+  env: dev
+  title: Kubearc Notes
+
+service:
+  type: ClusterIP
+  port: 80
+  annotations: {}
+
+ingress:
+  enabled: true
+  className: nginx
+  host: notes-dev.kubearc.local
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 256Mi
+
+autoscaling:                 # session 14
+  enabled: false
+  minReplicas: 2
+  maxReplicas: 6
+  targetCPUUtilizationPercentage: 60
+
+postgres:
+  image: postgres:16-alpine
+  database: notes
+  user: postgres
+  password: dev-only-password   # dev default; prod must pass its own
+  existingSecret: ""            # name of a Secret with POSTGRES_PASSWORD (session 13)
+  storage: 1Gi
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+
+networkPolicy:               # session 15
+  enabled: false
+  ingressNamespace: ingress-nginx
+
+metrics:                     # session 16 (needs kube-prometheus-stack CRDs)
+  serviceMonitor:
+    enabled: false
+    interval: 15s
+  alerts:
+    enabled: false

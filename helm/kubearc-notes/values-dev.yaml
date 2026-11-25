@@ -1,0 +1,3 @@
+# Written by CI on every push to main. Argo CD deploys whatever this says.
+image:
+  tag: "1.0.0"

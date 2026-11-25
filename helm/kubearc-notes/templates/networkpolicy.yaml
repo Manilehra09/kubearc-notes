@@ -1,0 +1,42 @@
+{{- if .Values.networkPolicy.enabled }}
+# The app: reachable from the Ingress controller's namespace and from Pods in its own namespace (helm test, debugging)
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ .Release.Name }}-web
+  labels:
+    {{- include "notes.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "notes.selectorLabels" . | nindent 6 }}
+  policyTypes: [Ingress]
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: {{ .Values.networkPolicy.ingressNamespace }}
+    - podSelector: {}
+    ports:
+    - port: 8080
+---
+# Postgres: only the app may connect
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ .Release.Name }}-postgres
+  labels:
+    {{- include "notes.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "notes.dbSelectorLabels" . | nindent 6 }}
+  policyTypes: [Ingress]
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          {{- include "notes.selectorLabels" . | nindent 10 }}
+    ports:
+    - port: 5432
+{{- end }}

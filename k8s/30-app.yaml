@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notes
+  namespace: notes
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: notes
+  template:
+    metadata:
+      labels:
+        app: notes
+    spec:
+      securityContext:
+        runAsNonRoot: true
+      containers:
+      - name: notes
+        image: ghcr.io/YOU/kubearc-notes:1.0.0      # <- your image, lower case
+        ports:
+        - containerPort: 8080
+        envFrom:
+        - configMapRef:
+            name: notes-config
+        env:
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: POSTGRES_PASSWORD
+        startupProbe:
+          httpGet: {path: /healthz, port: 8080}
+          periodSeconds: 2
+          failureThreshold: 30
+        readinessProbe:
+          httpGet: {path: /readyz, port: 8080}
+          periodSeconds: 5
+        livenessProbe:
+          httpGet: {path: /healthz, port: 8080}
+          periodSeconds: 10
+        resources:
+          requests: {cpu: 100m, memory: 128Mi}
+          limits: {cpu: 500m, memory: 256Mi}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: notes
+  namespace: notes
+spec:
+  selector:
+    app: notes
+  ports:
+  - name: http
+    port: 80
+    targetPort: 8080

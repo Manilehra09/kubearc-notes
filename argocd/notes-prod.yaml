@@ -1,0 +1,31 @@
+# Argo CD Application: prod follows main too, but only changes when values-prod.yaml changes
+# (a reviewed pull request). The DB password is NOT in Git: create the Secret once by hand:
+#   kubectl create secret generic notes-prod-db -n notes-prod --from-literal=POSTGRES_PASSWORD=Prod-Pass-123
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: notes-prod
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/YOU/kubearc-notes.git
+    targetRevision: main
+    path: helm/kubearc-notes
+    helm:
+      releaseName: notes-prod
+      valueFiles:
+        - values.yaml
+        - values-prod.yaml
+      parameters:
+        - name: postgres.existingSecret
+          value: notes-prod-db
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: notes-prod
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

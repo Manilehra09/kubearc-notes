@@ -1,0 +1,23 @@
+# Production overrides: only what differs from values.yaml
+replicaCount: 3
+
+image:
+  tag: "1.1.0"         # prod is promoted by changing this line in a pull request
+
+app:
+  env: prod
+
+ingress:
+  host: notes.kubearc.local
+
+resources:
+  requests:
+    cpu: 200m
+    memory: 256Mi
+  limits:
+    cpu: "1"
+    memory: 512Mi
+
+postgres:
+  password: ""          # give --set postgres.password=…, or use existingSecret
+  storage: 2Gi
